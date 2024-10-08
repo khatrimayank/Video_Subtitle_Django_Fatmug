@@ -1,0 +1,18 @@
+<!-- video_player.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Player</title>
+</head>
+<body>
+    <h1>{{ video.title }}</h1>
+    <video id="yourVideoElementId" width="320" height="240" controls>
+        <source src="{{ video.file.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Include the search results template here if needed -->
+    {% include 'video_processing/search_results.html' %}
+</body>
+</html>

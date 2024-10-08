@@ -1,0 +1,42 @@
+# docker-compose.yml
+
+version: '3'
+
+services:
+  db:
+    image: mysql:8.0  # Using MySQL 8.0
+    environment:
+      MYSQL_DATABASE: fatmug_db
+      MYSQL_USER: 
+      MYSQL_PASSWORD: 
+      MYSQL_ROOT_PASSWORD: Mysql@123
+    ports:
+      - "3307:3306"  # Expose MySQL port
+    volumes:
+      - mysql_data:/var/lib/mysql  # Persist database data
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000  # Run the Django development server
+    volumes:
+      - .:/app  # Bind the project files to the container
+    ports:
+      - "8000:8000"  # Expose the Django development server on port 8000
+    depends_on:
+      - db
+      - redis  # Ensure the web service waits for db and redis to be ready
+
+  redis:
+    image: "redis:alpine"  # Use a lightweight Redis image
+
+  celery:
+    build: .
+    command: celery -A video_processing worker --loglevel=info  # Start Celery worker for background tasks
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+
+volumes:
+  mysql_data:

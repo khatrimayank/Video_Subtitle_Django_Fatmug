@@ -1,0 +1,5 @@
+<!-- search.html -->
+<form method="GET" action="{% url 'search' video_id=video.id %}">
+    <input type="text" name="q" placeholder="Search subtitles..." required>
+    <button type="submit">Search</button>
+</form>

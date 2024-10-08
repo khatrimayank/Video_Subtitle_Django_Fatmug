@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+    <style>
+        video {
+            width: 100%;  /* Make the video responsive */
+        }
+        ul {
+            max-height: 300px;  /* Set a maximum height */
+            overflow-y: auto;   /* Enable vertical scrolling */
+        }
+    </style>
+</head>
+<body>
+    <h1>Search Results for "{{ request.GET.q }}"</h1>
+
+    <video id="videoPlayer" controls>
+        <source src="{{ video.file.url }}" type="video/mp4">
+        <track src="{{ video.subtitles.url }}" kind="subtitles" srclang="en" label="English">
+        Your browser does not support the video tag.
+    </video>
+
+    <form method="get" action="{% url 'search' video.id %}">
+        <input type="text" name="q" placeholder="Search subtitles..." value="{{ request.GET.q }}">
+        <select name="lang">
+            {% for lang in distinct_languages %}
+                <option value="{{ lang }}" {% if lang == selected_language %}selected{% endif %}>{{ lang|upper }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Search</button>
+    </form>
+
+    {% if results %}
+        <ul>
+            {% for result in results %}
+                <li>
+                    {{ result.text }} - 
+                    <a href="#" onclick="playFrom({{ result.start_time }})">Jump to {{ result.start_time }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results found for your search.</p>
+    {% endif %}
+
+    <script>
+function playFrom(timestamp) {
+    var video = document.getElementById('videoPlayer');
+    
+    // Ensure timestamp is converted to seconds if necessary (e.g., if it's in milliseconds)
+    var timeInSeconds = timestamp;
+
+    // Set the video's current time to the subtitle start time
+    video.currentTime = timeInSeconds;
+
+    // Ensure the video is allowed to play
+    video.play();
+}
+</script>
+
+</body>
+</html>

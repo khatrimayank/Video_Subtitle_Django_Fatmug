@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video List</title>
+</head>
+<body>
+    <h1>Uploaded Videos</h1>
+    <ul>
+    {% for video in videos %}
+        <li>
+            <h3>{{ video.title }}</h3>
+            <p>Uploaded on: {{ video.uploaded_at }}</p>
+            <p>Subtitles:</p>
+            {% if video.subtitle_set.exists %}
+                <ul>
+                    {% for subtitle in video.subtitle_set.all %}
+                        <li>
+                            <a href="javascript:void(0);" onclick="playSubtitle('video_{{ video.id }}', {{ subtitle.start_time }}, {{ subtitle.end_time }})">
+                                {{ subtitle.text }}
+                            </a> 
+                            ({{ subtitle.start_time }} - {{ subtitle.end_time }})
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No subtitles available.</p>
+            {% endif %}
+            <video id="video_{{ video.id }}" width="600" controls>
+                <source src="{{ video.file.url }}" type="video/mp4">
+                <track src="{{ video.subtitles_url }}" kind="subtitles" srclang="en" label="English" default>
+                Your browser does not support the video tag.
+                <p>Error: Video not found or unable to play.</p>
+            </video>
+        </li>
+    {% endfor %}
+    </ul>
+
+    <script>
+        let pauseTimer = null;
+        let isUserInteracting = false;
+        let userInteractionTimeout = null;
+
+        function playSubtitle(videoId, startTime, endTime) {
+            const videoElement = document.getElementById(videoId);
+
+            if (videoElement) {
+                if (pauseTimer) {
+                    clearTimeout(pauseTimer);
+                    pauseTimer = null;
+                }
+
+                videoElement.currentTime = startTime;
+
+                videoElement.play().catch(error => {
+                    console.error(`Error playing video ID: ${videoId}:`, error);
+                });
+
+                pauseTimer = setTimeout(() => {
+                    if (!isUserInteracting && !videoElement.paused) {
+                        videoElement.pause();
+                    }
+                }, (endTime - startTime) * 1000);
+            }
+        }
+
+        document.querySelectorAll('video').forEach(videoElement => {
+            const videoId = videoElement.id;
+
+            videoElement.addEventListener('seeking', () => {
+                handleUserInteraction();
+            });
+
+            videoElement.addEventListener('play', () => {
+                handleUserInteraction();
+            });
+
+            videoElement.addEventListener('pause', () => {
+                handleUserInteraction();
+            });
+
+            function handleUserInteraction() {
+                if (pauseTimer) {
+                    clearTimeout(pauseTimer);
+                    pauseTimer = null;
+                }
+                isUserInteracting = true;
+
+                if (userInteractionTimeout) {
+                    clearTimeout(userInteractionTimeout);
+                }
+
+                userInteractionTimeout = setTimeout(() => {
+                    isUserInteracting = false;
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
